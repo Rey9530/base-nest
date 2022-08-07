@@ -24,6 +24,8 @@ export class User {
     @Column('text')
     fullName: string;
 
+    
+
     @ApiProperty()
     @Column('bool', {
         default: true
@@ -37,6 +39,13 @@ export class User {
     })
     roles: string[];
 
+
+    
+    @ApiProperty()
+    @Column('text',{
+        nullable:true
+    })
+    avatar: string;
 
 
     @BeforeInsert()

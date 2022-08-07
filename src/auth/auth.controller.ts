@@ -29,7 +29,7 @@ export class AuthController {
     return this.authService.login( loginUserDto );
   }
 
-  @Get('check-status')
+  @Post('check-status')
   @Auth()
   checkAuthStatus(
     @GetUser() user: User

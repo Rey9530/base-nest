@@ -6,19 +6,19 @@ export class LoginUserDto {
 
     
     @ApiProperty()
-    @IsString()
-    @IsEmail()
+    @IsString({message:'El correo Electronico es requerido'})
+    @IsEmail({message:'El correo no es valido'})
     email: string;
 
     
     @ApiProperty()
-    @IsString()
-    @MinLength(6)
-    @MaxLength(50)
-    @Matches(
-        /(?:(?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-        message: 'The password must have a Uppercase, lowercase letter and a number'
-    })
+    @IsString({message:'El password es requerido'})
+    // @MinLength(6)
+    // @MaxLength(50)
+    // @Matches(
+    //     /(?:(?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    //     message: 'The password must have a Uppercase, lowercase letter and a number'
+    // })
     password: string;
 
 }
