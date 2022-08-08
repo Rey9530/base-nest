@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Tablero } from 'src/tableros/entities/tablero.entity';
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'; 
+import { Tableros_miembros } from '../../tableros/entities/tablero.miembros.entity';
 
 @Entity('users')
 export class User {
@@ -37,15 +39,28 @@ export class User {
         array: true,
         default: ['user']
     })
-    roles: string[];
-
-
+    roles: string[]; 
     
     @ApiProperty()
     @Column('text',{
         nullable:true
     })
     avatar: string;
+ 
+    @OneToMany(
+        () => Tablero,
+        (tablero) => tablero.user,
+        { cascade: true }
+    )
+    tablero: Tablero;
+
+    
+    @OneToMany(
+        () => Tableros_miembros,
+        (tableros_miembros) => tableros_miembros.miembro,
+        { cascade: true }
+    )
+    miembro: Tableros_miembros;
 
 
     @BeforeInsert()
