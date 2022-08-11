@@ -1,13 +1,13 @@
-import { Injectable, BadRequestException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { CreateTableroDto } from './dto/create-tablero.dto';
-import { UpdateTableroDto } from './dto/update-tablero.dto';
+import { Injectable, BadRequestException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common'; 
 import { Tablero } from './entities/tablero.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../auth/entities/user.entity';
 import { Tableros_miembros } from './entities/tablero.miembros.entity';
-import { AddMiembroTableroDto } from './dto/add-mienbro-tablero.dto';
+import { AddMiembroTableroDto,AddListaTableroDto,AddCardListaTableroDto, MoveCardDto,CreateTableroDto,UpdateTableroDto } from './dto/'; 
 
+import { Tableros_listas } from './entities/tablero.listas.entity';
+import { Tableros_listas_cards } from './entities';
 @Injectable()
 export class TablerosService {
   private readonly logger = new Logger('TablerosService');
@@ -21,6 +21,12 @@ export class TablerosService {
 
     @InjectRepository(Tableros_miembros)
     private readonly tableroMienRepository: Repository<Tableros_miembros>,
+
+    @InjectRepository(Tableros_listas)
+    private readonly tableroListRepository: Repository<Tableros_listas>,
+
+    @InjectRepository(Tableros_listas_cards)
+    private readonly tableroListCardRepository: Repository<Tableros_listas_cards>,
   ){
 
   }
@@ -74,6 +80,110 @@ export class TablerosService {
     return this.findOne(id);
   }
 
+  
+  async agregarLista(id:string,descripcion: AddListaTableroDto) {   
+    let tablero = await this.tableroRepository.findOneBy({id}); 
+    if(!tablero) throw new BadRequestException(`El tablero no existe `)
+     const list = await this.tableroListRepository.create({
+      ...descripcion,
+      tablero
+     });
+     await this.tableroListRepository.save(list);
+     delete list.tablero;
+     return list;
+  }
+
+  
+  async agregarCard(id:string,data: AddCardListaTableroDto) {   
+    let tableros_listas = await this.tableroListRepository.findOneBy({id}); 
+    if(!tableros_listas) throw new BadRequestException(`La lista no existe `)
+     const card = await this.tableroListCardRepository.create({
+      title:data.title,
+      position:data.position,
+      tableros_listas
+     });
+     await this.tableroListCardRepository.save(card);
+     delete card.tableros_listas;
+     return card;
+  }
+
+  
+  async actializarCard(id:string,newcard: AddCardListaTableroDto) {   
+    let card = await this.tableroListCardRepository.findOneBy({id}); 
+    if(!card) throw new BadRequestException(`El Card no existe `) 
+    let updated = Object.assign(card, newcard);  
+    await this.tableroListCardRepository.save(updated); 
+    return updated;
+  }
+
+  
+  async moveCard(cardMove: MoveCardDto) {   
+    let card = await this.tableroListCardRepository.findOneBy({id:cardMove.id_card}); 
+    if(!card) throw new BadRequestException(`El Card no existe `) 
+
+    
+    let list = await this.tableroListRepository.findOneBy({id:cardMove.id_list}); 
+    if(!list) throw new BadRequestException(`El List no existe `) 
+
+    
+    card.tableros_listas = list;
+    await this.tableroListCardRepository.save(card); 
+    return card;
+  }
+
+  
+  async actualizarLista(id:string,descripcion: AddListaTableroDto) {   
+    let lista = await this.tableroListRepository.findOneBy({id});
+    if ( !lista ) throw new NotFoundException(`La lista con el id: ${ id } no existe`); 
+    let updated = Object.assign(lista, descripcion); 
+    return this.tableroListRepository.save(updated); 
+  }
+  
+  async eliminarLista(id:string) {   
+    let lista = await this.tableroListRepository.findOneBy({id});
+    if ( !lista ) throw new NotFoundException(`La lista con el id: ${ id } no existe`);  
+    const result = await this.tableroListRepository.delete({id});
+
+    return result.affected>0 ?{ statusCode:200 } : { statusCode:500 }
+  }
+
+  async obtenerListas(id:string) {   
+    let tablero = await this.tableroRepository.findOneBy({id}); 
+    if(!tablero) throw new BadRequestException(`El tablero no existe `);
+ 
+    return  await this.tableroListRepository.find({ 
+      select: ['descripcion','id', 'tablero'],
+      where:{
+        estado:true,
+        tablero:{
+          id:tablero.id
+        }
+      },
+      relations:{ 
+        cards:true
+      },
+      order:{
+        position: "ASC"
+      }
+      
+     })
+  }
+  
+  async obtenerCard(id:string) {   
+    let list = await this.tableroListRepository.findOneBy({id}); 
+    if(!list) throw new BadRequestException(`La lista no existe `);
+ 
+    return  await this.tableroListCardRepository.find({ 
+      select: ['id','description','dueDate','title','position','estado'],
+      where:{
+        estado:true,
+        tableros_listas:{
+          id:list.id
+        }
+      }
+     })
+  }
+
   async finMashUserTablero(idUser: string,idTablero:string) {
     const queryBuilder = this.tableroMienRepository.createQueryBuilder('tableros_miembros'); 
     const tableroMienbros = await queryBuilder
@@ -94,8 +204,9 @@ export class TablerosService {
         })
         .leftJoinAndSelect('tablero.miembros','tableros_miembros')
         .leftJoinAndSelect('tableros_miembros.miembro','users')
+        .leftJoinAndSelect('tablero.lista','tableros_listas')
+        .leftJoinAndSelect('tableros_listas.cards','tableros_listas_cards')
         .getOne();
-
         return tablero;
 
   }

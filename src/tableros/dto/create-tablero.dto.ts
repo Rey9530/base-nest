@@ -11,8 +11,7 @@ export class CreateTableroDto {
 
     
     @ApiProperty()
-    @IsString({message:'La description es requerida'})
-    @MinLength(5,{ message:'La description No debe ser menor a 3 caracteres' })
+    @IsString({message:'La description es requerida'}) 
     description: string;
 
     @ApiProperty()

@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Body, Param, Delete, ParseUUIDPipe, Put } from '@nestjs/common';
-import { TablerosService } from './tableros.service';
-import { CreateTableroDto } from './dto/create-tablero.dto';
-import { UpdateTableroDto } from './dto/update-tablero.dto';
 import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
-import { AddMiembroTableroDto } from './dto/add-mienbro-tablero.dto';
+
+import { TablerosService } from './tableros.service';
+
+import { AddMiembroTableroDto,AddListaTableroDto,AddCardListaTableroDto,CreateTableroDto,UpdateTableroDto, MoveCardDto } from './dto/';  
 
 @Controller('tableros')
 @Auth()
@@ -18,17 +18,80 @@ export class TablerosController {
   ) {
     return this.tablerosService.create(createTableroDto,user);
   }
-
-
   
   @Post('agregar_miembro/:id')
   agregarMiembro(
     @Param('id', ParseUUIDPipe) id: string, 
     @Body() addMiembroTableroDto: AddMiembroTableroDto, 
   ) {
-    return this.tablerosService.agregarMiembro(id,addMiembroTableroDto);
-    
+    return this.tablerosService.agregarMiembro(id,addMiembroTableroDto); 
   }
+  
+
+  
+  @Post('listas/:id')
+  agregarLista(
+    @Param('id', ParseUUIDPipe) id: string, 
+    @Body() addList: AddListaTableroDto, 
+  ) {
+    return this.tablerosService.agregarLista(id,addList); 
+  }
+
+  
+  @Post('cards/:id')
+  agregarCard(
+    @Param('id', ParseUUIDPipe) id: string, 
+    @Body() addCard: AddCardListaTableroDto, 
+  ) {
+    return this.tablerosService.agregarCard(id,addCard); 
+  }
+
+  @Put('cards/:id')
+  actializarCard(
+    @Param('id', ParseUUIDPipe) id: string, 
+    @Body() addCard: AddCardListaTableroDto, 
+  ) {
+    return this.tablerosService.actializarCard(id,addCard); 
+  }
+
+  @Put('move_cards')
+  moveCard( 
+    @Body() cardMove: MoveCardDto, 
+  ) {
+    return this.tablerosService.moveCard(cardMove); 
+  }
+  
+  @Get('cards/:id')
+  obtenerCard(
+    @Param('id', ParseUUIDPipe) id: string,  
+  ) {
+    return this.tablerosService.obtenerCard(id); 
+  }
+
+  
+  @Put('listas/:id')
+  actualizarLista(
+    @Param('id', ParseUUIDPipe) id: string, 
+    @Body() addList: AddListaTableroDto, 
+  ) {
+    return this.tablerosService.actualizarLista(id,addList); 
+  }
+
+  
+  @Delete('listas/:id')
+  eliminarLista(
+    @Param('id', ParseUUIDPipe) id: string,  
+  ) {
+    return this.tablerosService.eliminarLista(id); 
+  }
+
+  @Get('listas/:id')
+  obtenerLista(
+    @Param('id', ParseUUIDPipe) id: string,  
+  ) {
+    return this.tablerosService.obtenerListas(id); 
+  }
+
 
   @Get()
   findAll(
